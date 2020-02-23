@@ -1,0 +1,5 @@
+Hi,
+
+This is a simple task manager app built using MEAN stack. Please feel free to contribute to this project to make it better. 
+
+Also, this is a great project for beginners who want to learn Angular, MongoDB and(or) Express.
