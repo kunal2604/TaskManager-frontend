@@ -3,6 +3,7 @@ import { TaskService } from 'src/app/services/task.service';
 import IList from 'src/app/interfaces/IList';
 import ITask from 'src/app/interfaces/ITask';
 import { ActivatedRoute, Router, Params } from '@angular/router';
+import { AuthService } from 'src/app/services/auth.service';
 
 @Component({
   selector: 'app-task-view',
@@ -12,19 +13,24 @@ import { ActivatedRoute, Router, Params } from '@angular/router';
 export class TaskViewComponent implements OnInit {
   lists: IList[] = [];
   tasks: ITask[] = [];
-  //listId: string;
+  selectedListId: string;
 
   constructor(
     private taskService: TaskService,
+    private authService: AuthService,
     private activeRoute: ActivatedRoute,
     private router: Router
   ) { }
 
   ngOnInit() {
     this.taskService.getLists()
-      .subscribe((lists: IList[]) => this.lists = lists);
+      .subscribe((lists: IList[]) => {
+        this.lists = lists;
+        console.log(lists);
+      });
     this.activeRoute.params.subscribe((params: Params) => {
       if(params.listId){
+        this.selectedListId = params.listId;
         this.taskService.getTasks(params.listId).subscribe((tasks: ITask[]) => this.tasks = tasks);
       } else {
         this.tasks = undefined;
@@ -41,27 +47,29 @@ export class TaskViewComponent implements OnInit {
   }
 
   createNewList() {
-    this.taskService.createList('Testing').subscribe((response: any) => {
-      console.log(response);
+    this.taskService.createList('Testing').subscribe((res: any) => {
+      console.log(res);
     },
       (error: any) => {
         console.log('hi');
       });
   }
 
-  deleteList(list: IList) {
-    this.taskService.deleteList(list._id).subscribe(() => {
-      this.lists = this.lists.filter(lst => lst._id != list._id);
+  onDeleteListClick() {
+    this.taskService.deleteList(this.selectedListId).subscribe((res: any) => {
+      this.router.navigate(['/lists']);
+      //NO NEED TO FILTER AS WE ARE NAVIGATING
     },
     (error: any) => {
       console.log(error);
     });
   }
 
-  deleteTask(task: ITask) {
-    this.taskService.deleteTask(task._listId, task._id).subscribe((task: ITask) => {
-      this.tasks = this.tasks.filter(t => t._id != task._id);
-    }, (error: any) => {
+  onDeleteTaskClick(taskId: string) {
+    this.taskService.deleteTask(this.selectedListId, taskId).subscribe((res: any) => {
+      this.tasks = this.tasks.filter(task => task._id !== taskId);
+    },
+    (error: any) => {
       console.log(error);
     });
   }
@@ -77,7 +85,10 @@ export class TaskViewComponent implements OnInit {
       this.router.navigate(['./new-task', {}], {relativeTo: this.activeRoute});
     }, (error: any) => {
       console.log(error);
-    });
-    
+    });    
+  }
+
+  onLogoutButtonClick() {
+    this.authService.logout();
   }
 }
